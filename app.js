@@ -6,35 +6,26 @@ const player = (symbol) => {
   return { getSymbol };
 };
 
-const computer = (symbol, row, col) => {
-  this.symbol = symbol;
-  this.row = row;
-  this.col = col;
-
-  const getSymbol = () => symbol;
-
-  return { getSymbol, row, col };
-};
-
 const gameboard = (() => {
   let positionNumber = 0;
 
   const createBoard = (() => {
     const $body = document.body;
-    const $gameboard = document.createElement("div");
-    const $msg = document.createElement("p");
-    const $restart = document.createElement("button");
-    $msg.classList.add("msg");
-    $gameboard.classList.add("gameboard");
-    $restart.classList.add("restart");
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        const $div = document.createElement("div");
-        $div.classList.add("cell");
+    const $gameboard = document.createElement('div');
+    const $msg = document.createElement('p');
+    const $restart = document.createElement('button');
+    $msg.classList.add('msg');
+    $gameboard.classList.add('gameboard');
+    $restart.classList.add('restart');
+    $restart.textContent = 'RESTART';
+    for (let i = 0; i < 3; i+=1) {
+      for (let j = 0; j < 3; j+=1) {
+        const $div = document.createElement('div');
+        $div.classList.add('cell');
         $div.dataset.index = `${i}${j}`;
         $div.dataset.position = positionNumber;
         $gameboard.append($div);
-        positionNumber++;
+        positionNumber+=1;
       }
     }
 
@@ -46,28 +37,30 @@ const gameboard = (() => {
   })();
 
   const board = [
-    ["", "", ""],
-    ["", "", ""],
-    ["", "", ""],
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', ''],
   ];
 
   const setField = (index, sign) => {
-    const firstIndex = parseInt(index[0]);
-    const secondIndex = parseInt(index[1]);
+    const firstIndex = parseInt(index[0], 10);
+    const secondIndex = parseInt(index[1],10);
     board[firstIndex][secondIndex] = sign;
   };
 
   const getField = (index) => {
-    if (typeof index === "number") index = String(index);
-    const firstIndex = parseInt(index[0]);
-    const secondIndex = parseInt(index[1]);
+    if (typeof index === 'number'){
+     index = String(index);
+    } 
+    const firstIndex = parseInt(index[0],10);
+    const secondIndex = parseInt(index[1],10);
     return board[firstIndex][secondIndex];
   };
 
   const reset = () => {
     board.forEach((row) => {
-      for (let i = 0; i < row.length; i++) {
-        row[i] = "";
+      for (let i = 0; i < row.length; i+=1) {
+         row[i] = '';
       }
     });
   };
@@ -75,87 +68,12 @@ const gameboard = (() => {
   return { setField, getField, reset, board, createBoard };
 })();
 
-const displayController = (() => {
-  const $fieldElements = Array.from(document.querySelectorAll(".cell"));
-  const $messageElement = document.querySelector(".msg");
-
-  const setResultMessage = (winner) => {
-    if (winner === "Draw") {
-      setMessageElement("It's a draw!");
-    } else {
-      setMessageElement(`${winner} has won!`);
-    }
-  };
-
-  const setMessageElement = (msg) => {
-    $messageElement.textContent = msg;
-  };
-
-  const reset = () => {
-    $fieldElements.forEach((grid) => {
-      grid.textContent = "";
-    });
-  };
-
-  gameboard.createBoard.$restart.addEventListener("click", (e) => {
-    gameboard.reset();
-    gameController.reset();
-    reset();
-    setMessageElement(`Player X turn`);
-  });
-
-  const updateBoard = (element, currentSymbol) => {
-    gameboard.setField(element.dataset.index, currentSymbol);
-    element.textContent = currentSymbol;
-  };
-
-  const displayCompField = (computerIndex, sign) => {
-    $fieldElements.forEach((field) => {
-      if (
-        field.dataset.index ===
-        String(computerIndex[0]) + String(computerIndex[1])
-      )
-        field.textContent = sign;
-    });
-  };
-
-  $fieldElements.forEach((field) =>
-    field.addEventListener("click", (e) => {
-      if (field.textContent !== "" || gameController.isGameOver()) return;
-      updateBoard(e.target, gameController.getCurrentSymbol());
-      gameController.playRound(parseInt(e.target.dataset.position));
-
-      const compIndex = gameController.checkSetEmpty();
-
-      if (compIndex && gameController.isCompTurn()) {
-        gameController.setCompField(compIndex[0], compIndex[1]);
-        displayCompField(compIndex, gameController.getCurrentSymbol());
-        gameController.isPlayerTurn();
-
-        const comptPos = (compIndex) => {
-          const computerIndex = String(compIndex[0]) + String(compIndex[1]);
-
-          for (let i = 0; i < $fieldElements.length; i++) {
-            if ($fieldElements[i].dataset.index === computerIndex) {
-              return i;
-            }
-          }
-        };
-
-        gameController.playRound(comptPos(compIndex));
-      }
-    })
-  );
-
-  return { setMessageElement, setResultMessage, updateBoard, $fieldElements };
-})();
-
 const gameController = (() => {
   const makeRandomNum = () => Math.floor(Math.random() * 3);
-  const playerO = player("O");
-  const playerX = computer("X", makeRandomNum(), makeRandomNum());
+  const playerO = player('O');
+  const playerX = player('X');
   let gameOver = false;
-  let compTurn = false;
+  const compTurn = false;
   let round = 1;
 
   const reset = () => {
@@ -163,18 +81,26 @@ const gameController = (() => {
     round = 1;
   };
 
+  const computerPos = (compIndex) => {
+    const computerIndex = `${compIndex[0]  }${  compIndex[1]}`;
+    for (let i = 0; i < displayController.$fieldElements.length; i+=1) {
+      if (displayController.$fieldElements[i].dataset.index === computerIndex) {
+        return i;
+      }
+    }
+  };
+
   const checkSetEmpty = () => {
     let row = makeRandomNum();
     let col = makeRandomNum();
-    const computer_index = [row, col];
+    const computerIndex = [row, col];
 
     while (gameboard.getField(`${row}${col}`) && round < 9) {
       row = makeRandomNum();
       col = makeRandomNum();
-      computer_index[0] = row;
-      computer_index[1] = col;
+      [row, col] = computerIndex;
     }
-    return computer_index;
+    return computerIndex;
   };
 
   const setCompField = (row, col) => {
@@ -211,49 +137,100 @@ const gameController = (() => {
       return;
     }
     if (round === 9) {
-      displayController.setResultMessage("Draw");
+      displayController.setResultMessage('Draw');
       gameOver = true;
       return;
     }
-    round++;
+    round+=1;
     displayController.setMessageElement(`Player ${getCurrentSymbol()}'s turn'`);
   };
 
-  const isGameOver = () => {
-    return gameOver;
-  };
+  const isGameOver = () => gameOver;
 
-  const isPlayerTurn = () => {
-    return (compTurn = false);
-  };
+  const isPlayerTurn = () => false;
 
-  const isCompTurn = () => {
-    return (compTurn = true);
-  };
+  const isCompTurn = () =>  true;
 
-  const getCurrentSymbol = () => {
-    return round % 2 === 0 ? playerX.getSymbol() : playerO.getSymbol();
-  };
+  const getCurrentSymbol = () => round % 2 === 0 ? playerX.getSymbol() : playerO.getSymbol();
 
   return {
     isGameOver,
     getCurrentSymbol,
     playRound,
     reset,
-    playerX,
     checkSetEmpty,
     setCompField,
     isCompTurn,
     isPlayerTurn,
+    computerPos,
   };
 })();
 
-//   $grids.forEach((grid) => {
-//     if (
-//       !grid.textContent &&
-//       grid.classList.contains(`${COMP_ROW}${COMP_COL}`)
-//     ) {
-//       grid.textContent = getSymbol(COMPUTER_SYMBOL);
-//     }
-//   });
-// }
+
+const displayController = (() => {
+  const $fieldElements = Array.from(document.querySelectorAll('.cell'));
+  const $messageElement = document.querySelector('.msg');
+
+  const setResultMessage = (winner) => {
+    if (winner === 'Draw') {
+      setMessageElement("It's a draw!");
+    } else {
+      setMessageElement(`${winner} has won!`);
+    }
+  };
+
+  const setMessageElement = (msg) => {
+    $messageElement.textContent = msg;
+  };
+
+  const reset = () => {
+    $fieldElements.forEach((grid) => {
+      grid.textContent = '';
+    });
+  };
+
+  gameboard.createBoard.$restart.addEventListener('click', () => {
+    gameboard.reset();
+    gameController.reset();
+    reset();
+    setMessageElement(`Player O turn`);
+  });
+
+  const updateBoard = (element, currentSymbol) => {
+    gameboard.setField(element.dataset.index, currentSymbol);
+    element.textContent = currentSymbol;
+  };
+
+  const displayCompField = (computerIndex, sign) => {
+    $fieldElements.forEach((field) => {
+      if (
+        field.dataset.index ===
+        `${computerIndex[0]  }${  String(computerIndex[1])}`
+      )
+        field.textContent = sign;
+    });
+  };
+
+  $fieldElements.forEach((field) =>
+    field.addEventListener('click', (e) => {
+      if (field.textContent !== '' || gameController.isGameOver()) return;
+      updateBoard(e.target, gameController.getCurrentSymbol());
+      gameController.playRound(parseInt(e.target.dataset.position,10));
+
+      const compIndex = gameController.checkSetEmpty();
+
+      if (compIndex && gameController.isCompTurn()) {
+        gameController.setCompField(compIndex[0], compIndex[1]);
+        displayCompField(compIndex, gameController.getCurrentSymbol());
+        gameController.isPlayerTurn();
+        gameController.playRound(gameController.computerPos(compIndex));
+      }
+    })
+  );
+
+  return { setMessageElement, setResultMessage, updateBoard, $fieldElements };
+})();
+
+
+// implement different ai level
+// styling => clean outer lines
